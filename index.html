@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ГречиХа — вротик-рок</title>
+  <meta name="description" content="Первый и единственный вротик-рок коллектив во Вселенной. Слушай, рискуй, вставай.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&family=Rubik+Mono+One&family=VT323&display=swap&subset=cyrillic" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            noir: '#0F0F12',
+            toxic: '#FF2A85',
+            sky: '#70D6FF',
+            slime: '#CCFF00',
+          },
+          fontFamily: {
+            display: ['Rubik Mono One', 'Impact', 'Oswald', 'sans-serif'],
+            body: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['VT323', 'monospace'],
+          },
+          animation: {
+            marquee: 'marquee 25s linear infinite',
+            flicker: 'flicker 2.5s infinite',
+            float: 'float 6s ease-in-out infinite',
+            flash: 'flash 5s infinite',
+          },
+          keyframes: {
+            marquee: {
+              '0%': { transform: 'translateX(0%)' },
+              '100%': { transform: 'translateX(-100%)' }
+            },
+            flicker: {
+              '0%, 19%, 21%, 23%, 25%, 54%, 56%, 100%': { opacity: '1' },
+              '20%, 24%, 55%': { opacity: '0.35' }
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+              '50%': { transform: 'translateY(-20px) rotate(6deg)' }
+            },
+            flash: {
+              '0%, 90%, 100%': { opacity: '0' },
+              '92%': { opacity: '0.5' },
+              '94%': { opacity: '0' },
+              '96%': { opacity: '0.25' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --toxic: #FF2A85;
+      --sky: #70D6FF;
+      --slime: #CCFF00;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: #0F0F12;
+      color: #fff;
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+    .grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: .06;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    .neon-text {
+      text-shadow:
+        0 0 10px #FF2A85,
+        0 0 40px #FF2A85,
+        0 0 80px rgba(255, 42, 133, 0.6);
+    }
+    .neon-sky {
+      text-shadow:
+        0 0 10px #70D6FF,
+        0 0 30px rgba(112, 214, 255, 0.6);
+    }
+    .glitch-text {
+      position: relative;
+      display: inline-block;
+    }
+    .glitch-text::before,
+    .glitch-text::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .glitch-text::before {
+      color: #70D6FF;
+      clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+    }
+    .glitch-text::after {
+      color: #FF2A85;
+      clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+    }
+    .glitch-text:hover::before {
+      animation: glitch-anim .35s cubic-bezier(.25, .46, .45, .94) both infinite;
+      opacity: .85;
+    }
+    .glitch-text:hover::after {
+      animation: glitch-anim .35s cubic-bezier(.25, .46, .45, .94) reverse both infinite;
+      opacity: .85;
+    }
+    @keyframes glitch-anim {
+      0% { transform: translate(0); }
+      20% { transform: translate(-3px, 3px); }
+      40% { transform: translate(-3px, -3px); }
+      60% { transform: translate(3px, 3px); }
+      80% { transform: translate(3px, -3px); }
+      100% { transform: translate(0); }
+    }
+    .sticker {
+      filter: drop-shadow(4px 4px 0 rgba(0,0,0,.55));
+      transition: transform .2s cubic-bezier(.34, 1.56, .64, 1);
+    }
+    .sticker:hover {
+      transform: scale(1.12) rotate(-6deg);
+    }
+    .win95 {
+      box-shadow:
+        inset 1px 1px #fff,
+        inset -1px -1px #000,
+        4px 4px 0 rgba(0,0,0,.4);
+    }
+    .win95-btn {
+      box-shadow:
+        inset 1px 1px #fff,
+        inset -1px -1px #000;
+    }
+    .win95-btn:active {
+      box-shadow:
+        inset 1px 1px #000,
+        inset -1px -1px #fff;
+    }
+    .ticker-wrap {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .ticker {
+      display: inline-block;
+      padding-left: 100%;
+      animation: marquee 22s linear infinite;
+    }
+    .ticker-item {
+      display: inline-block;
+      padding: 0 2rem;
+    }
+    .cassette-reel {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: none;
+    }
+    .cassette-tape {
+      animation: none;
+    }
+    .playing .cassette-reel {
+      animation: spin 2s linear infinite;
+    }
+    .playing .cassette-tape {
+      animation: tapeMove 1s linear infinite;
+    }
+    @keyframes tapeMove {
+      0% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: 20; }
+    }
+    .progress-bar {
+      transition: width .1s linear;
+    }
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0F0F12;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #FF2A85;
+      border: 2px solid #0F0F12;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="antialiased">
+  <div class="grain"></div>
+  <div class="fixed inset-0 pointer-events-none z-40 animate-flash bg-white mix-blend-overlay"></div>
+
+  <!-- Marquee -->
+  <div class="fixed top-0 left-0 right-0 z-50 bg-toxic text-noir border-b-2 border-black py-2 overflow-hidden">
+    <div class="ticker-wrap">
+      <div class="ticker font-mono text-sm md:text-base uppercase tracking-widest font-bold">
+        <span class="ticker-item">ГРЕЧИХА • ВРОТИК-РОК • ПОХУЙ ЧТО, ГЛАВНОЕ ЧТОБЫ ВСТАВИЛО •</span>
+        <span class="ticker-item">ГРЕЧИХА • ВРОТИК-РОК • ПОХУЙ ЧТО, ГЛАВНОЕ ЧТОБЫ ВСТАВИЛО •</span>
+        <span class="ticker-item">ГРЕЧИХА • ВРОТИК-РОК • ПОХУЙ ЧТО, ГЛАВНОЕ ЧТОБЫ ВСТАВИЛО •</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="fixed top-10 left-0 right-0 z-40 px-4 md:px-8 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <a href="#" class="font-display text-xl md:text-2xl text-white tracking-tighter">
+        <span class="text-toxic">ГРЕЧИ</span><span class="text-sky">ХА</span>
+      </a>
+      <div class="hidden md:flex gap-6 text-sm font-bold uppercase tracking-wider">
+        <a href="#about" class="hover:text-toxic transition-colors">О нас</a>
+        <a href="#music" class="hover:text-sky transition-colors">Музыка</a>
+        <a href="#gigs" class="hover:text-slime transition-colors">Афиша</a>
+        <a href="#faq" class="hover:text-toxic transition-colors">FAQ</a>
+      </div>
+      <a href="#contacts" class="bg-toxic text-noir px-4 py-2 font-bold uppercase text-xs md:text-sm tracking-widest hover:shadow-[0_0_20px_#FF2A85] transition-shadow">
+        Контакты
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-20 px-4 overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,_rgba(255,42,133,0.15)_0%,_transparent_55%)]"></div>
+    <div class="absolute top-24 left-[10%] text-4xl animate-float opacity-50">💔</div>
+    <div class="absolute bottom-40 right-[12%] text-5xl animate-float opacity-60" style="animation-delay:1s">🌾</div>
+    <div class="absolute top-1/3 right-1/4 text-3xl animate-float opacity-40" style="animation-delay:2s">⚡</div>
+    <div class="absolute bottom-1/4 left-1/4 text-4xl animate-float opacity-50" style="animation-delay:3s">🎀</div>
+
+    <div class="relative z-10 text-center max-w-6xl mx-auto">
+      <p class="font-mono text-toxic text-sm md:text-lg uppercase tracking-[0.4em] mb-4 animate-flicker">vr0tik-rock from the void</p>
+      <h1 class="glitch-text font-display text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] leading-none mb-6 text-transparent bg-clip-text bg-gradient-to-b from-white via-toxic to-toxic/80 neon-text cursor-default" data-text="ГРЕЧИХА">ГРЕЧИХА</h1>
+      <p class="text-lg md:text-2xl text-gray-300 max-w-2xl mx-auto mb-10 font-light leading-relaxed">
+        Первый и единственный <span class="text-sky font-bold">вротик-рок</span> коллектив во Вселенной.
+      </p>
+
+      <!-- Pseudo Player -->
+      <div class="max-w-md mx-auto bg-noir border-2 border-white/20 rounded-2xl p-4 md:p-6 shadow-[0_0_40px_rgba(255,42,133,0.2)] backdrop-blur-sm">
+        <div class="flex items-center gap-4 mb-4">
+          <div id="cassette" class="w-24 h-16 bg-gray-800 rounded-lg border border-white/10 relative overflow-hidden flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 80 50" class="w-20 h-12">
+              <rect x="2" y="8" width="76" height="34" rx="4" fill="#222" stroke="#555" stroke-width="1"/>
+              <rect x="8" y="14" width="64" height="18" rx="2" fill="#111"/>
+              <g class="cassette-reel" transform="translate(24,23)">
+                <circle cx="0" cy="0" r="7" fill="#333"/>
+                <circle cx="0" cy="0" r="2" fill="#FF2A85"/>
+              </g>
+              <g class="cassette-reel" transform="translate(56,23)">
+                <circle cx="0" cy="0" r="7" fill="#333"/>
+                <circle cx="0" cy="0" r="2" fill="#FF2A85"/>
+              </g>
+              <path d="M31 23 H49" stroke="#444" stroke-width="2" stroke-dasharray="4 2" class="cassette-tape"/>
+            </svg>
+          </div>
+          <div class="text-left min-w-0">
+            <p class="font-mono text-toxic text-sm uppercase">now playing</p>
+            <p class="font-display text-white text-base md:text-lg leading-tight truncate">ГРЕЧКА В НОЧИ</p>
+            <p class="text-xs text-gray-500">03:14 / 03:14</p>
+          </div>
+        </div>
+        <div class="h-1.5 bg-white/10 rounded-full mb-4 overflow-hidden">
+          <div id="progress" class="h-full bg-gradient-to-r from-toxic to-sky w-0 progress-bar" style="width:0%"></div>
+        </div>
+        <div class="flex items-center justify-between">
+          <button id="playBtn" class="w-12 h-12 rounded-full bg-toxic text-noir flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_20px_#FF2A85]">
+            <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+          </button>
+          <div class="flex items-center gap-2">
+            <i data-lucide="volume-2" class="w-4 h-4 text-gray-400"></i>
+            <div class="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div class="h-full bg-sky w-3/4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- About -->
+  <section id="about" class="py-20 md:py-32 px-4 relative">
+    <div class="max-w-4xl mx-auto">
+      <p class="font-mono text-sky uppercase tracking-[0.3em] mb-4">system.error</p>
+      <h2 class="font-display text-3xl md:text-5xl text-white mb-10">О НАС</h2>
+
+      <div class="relative bg-[#C0C0C0] text-black p-1 win95 max-w-2xl mx-auto transform rotate-1 hover:rotate-0 transition-transform">
+        <div class="relative bg-gradient-to-r from-[#000080] to-[#1084d0] text-white px-3 py-2 flex items-center justify-between">
+          <span class="font-mono text-sm tracking-wider pr-8">ОШИБКА: СЛИШКОМ МНОГО ГРЕЧКИ</span>
+          <button id="closeBtn" class="win95-btn bg-[#C0C0C0] text-black w-6 h-6 flex items-center justify-center text-xs font-bold transition-all duration-100" style="right:8px;top:8px;">✕</button>
+        </div>
+        <div class="p-6 md:p-8">
+          <div class="flex flex-col sm:flex-row gap-4 mb-4">
+            <div class="text-4xl shrink-0">⚠️</div>
+            <div>
+              <p class="font-bold mb-2 font-mono text-lg">ГРЕЧИХА не может быть закрыта.</p>
+              <p class="text-sm leading-relaxed mb-4">Мы родились там, где кончается асфальт и начинается бесконечная гречневая каша. Наша миссия — играть так, чтобы встало. Не только встало, но и не село.</p>
+              <p class="text-sm leading-relaxed text-gray-700">Жанр: <span class="bg-slime px-1 font-bold">вротик-рок</span>. Состав: две души, один бит, триллион эмоций.</p>
+            </div>
+          </div>
+          <div class="flex justify-end mt-6">
+            <button class="win95-btn bg-[#C0C0C0] px-6 py-2 font-mono text-sm font-bold hover:bg-[#d4d4d4]">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Discography -->
+  <section id="music" class="py-20 md:py-32 px-4 bg-noir relative">
+    <div class="max-w-7xl mx-auto">
+      <p class="font-mono text-toxic uppercase tracking-[0.3em] mb-4">релизы / r3l3as3s</p>
+      <h2 class="font-display text-3xl md:text-5xl text-white mb-12">ДИСКОГРАФИЯ</h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <!-- Release 1 -->
+        <article class="group relative bg-white/5 border border-white/10 p-4 hover:border-toxic transition-colors">
+          <div class="aspect-square bg-gradient-to-br from-toxic/40 via-noir to-sky/30 mb-4 relative overflow-hidden group-hover:rotate-2 transition-transform duration-300">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span class="text-7xl opacity-30 group-hover:scale-125 transition-transform">💔</span>
+            </div>
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+              <a href="#" class="w-10 h-10 rounded-full bg-toxic text-noir flex items-center justify-center hover:scale-110 transition-transform" title="Яндекс Музыка" aria-label="Яндекс Музыка">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97-.001c-.236 0-.44.086-.611.257-.17.171-.256.375-.256.611v7.026c0 .236.086.44.256.611.171.171.375.256.611.256h1.97c.236 0 .44-.085.611-.256.171-.171.256-.375.256-.611V9.089c0-.236-.085-.44-.256-.611-.171-.171-.375-.257-.611-.257zM9.076 8.22H7.105c-.236 0-.44.086-.611.257-.17.171-.256.375-.256.611v4.213c0 .236.086.44.256.611.171.171.375.256.611.256h1.971c.236 0 .44-.085.611-.256.17-.171.256-.375.256-.611V8.749c0-.236-.086-.44-.256-.611-.171-.171-.375-.257-.611-.257zm3.409 0h-1.97c-.236 0-.44.086-.611.257-.171.171-.256.375-.256.611v7.026c0 .236.085.44.256.611.171.171.375.256.611.256h1.97c.236 0 .44-.085.611-.256.171-.171.256-.375.256-.611V9.089c0-.236-.085-.44-.256-.611-.171-.171-.375-.257-.611-.257z"/></svg>
+              </a>
+              <a href="#" class="w-10 h-10 rounded-full bg-slime text-noir flex items-center justify-center hover:scale-110 transition-transform" title="Spotify" aria-label="Spotify">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.141-1-.12-1.141-.6-.141-.48.12-.999.601-1.14 4.32-1.379 9.72-.72 13.439 1.68.36.18.54.66.302 1.14zm.12-3.36C15.24 4.98 8.82 4.8 5.16 6.06c-.6.18-1.26-.12-1.44-.72-.18-.6.12-1.26.72-1.44 4.26-1.44 11.28-1.26 15.72 1.62.54.36.72 1.08.36 1.62-.36.42-1.08.54-1.62.18z"/></svg>
+              </a>
+              <a href="#" class="w-10 h-10 rounded-full bg-sky text-noir flex items-center justify-center hover:scale-110 transition-transform" title="VK" aria-label="VK">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M15.684 0H8.316C1.592 0 0 1.592 0 8.316v7.368C0 22.408 1.592 24 8.316 24h7.368C22.408 24 24 22.408 24 15.684V8.316C24 1.592 22.408 0 15.684 0zm3.692 17.123h-1.744c-.66 0-.862-.523-2.049-1.714-1.033-1.033-1.49-1.171-1.744-1.171-.356 0-.458.102-.458.593v1.575c0 .424-.135.678-1.253.678-1.846 0-3.896-1.118-5.335-3.202C4.624 10.857 4 8.967 4 8.524c0-.254.102-.491.593-.491h1.744c.44 0 .61.203.78.677.863 2.49 2.303 4.675 2.896 4.675.22 0 .322-.102.322-.66V9.721c-.068-1.186-.695-1.287-.695-1.71 0-.203.17-.407.44-.407h2.744c.373 0 .508.203.508.643v3.473c0 .372.17.508.271.508.22 0 .407-.135.814-.542 1.27-1.422 2.176-3.61 2.176-3.61.119-.254.322-.491.763-.491h1.744c.525 0 .644.27.525.643-.22 1.017-2.354 4.031-2.354 4.031-.186.305-.254.44 0 .78.186.254.796.779 1.203 1.253.745.847 1.32 1.558 1.473 2.049.17.49-.085.744-.576.744z"/></svg>
+              </a>
+            </div>
+          </div>
+          <h3 class="font-display text-xl text-white mb-1">ГРЕЧКА В НОЧИ</h3>
+          <p class="font-mono text-xs text-toxic mb-2">СИНГЛ • 2025</p>
+          <p class="text-sm text-gray-400">Трек про то, как гречка остывает, а душа горит.</p>
+        </article>
+
+        <!-- Release 2 -->
+        <article class="group relative bg-white/5 border border-white/10 p-4 hover:border-sky transition-colors">
+          <div class="aspect-square bg-gradient-to-br from-sky/40 via-noir to-slime/30 mb-4 relative overflow-hidden group-hover:-rotate-2 transition-transform duration-300">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span class="text-7xl opacity-30 group-hover:scale-125 transition-transform">🌾</span>
+            </div>
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+              <a href="#" class="w-10 h-10 rounded-full bg-toxic text-noir flex items-center justify-center hover:scale-110 transition-transform" title="Яндекс Музыка" aria-label="Яндекс Музыка">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97-.001c-.236 0-.44.086-.611.257-.17.171-.256.375-.256.611v7.026c0 .236.086.44.256.611.171.171.375.256.611.256h1.97c.236 0 .44-.085.611-.256.171-.171.256-.375.256-.611V9.089c0-.236-.085-.44-.256-.611-.171-.171-.375-.257-.611-.257zM9.076 8.22H7.105c-.236 0-.44.086-.611.257-.17.171-.256.375-.256.611v4.213c0 .236.086.44.256.611.171.171.375.256.611.256h1.971c.236 0 .44-.085.611-.256.17-.171.256-.375.256-.611V8.749c0-.236-.086-.44-.256-.611-.171-.171-.375-.257-.611-.257zm3.409 0h-1.97c-.236 0-.44.086-.611.257-.171.171-.256.375-.256.611v7.026c0 .236.085.44.256.611.171.171.375.256.611.256h1.97c.236 0 .44-.085.611-.256.171-.171.256-.375.256-.611V9.089c0-.236-.085-.44-.256-.611-.171-.171-.375-.257-.611-.257z"/></svg>
+              </a>
+              <a href="#" class="w-10 h-10 rounded-full bg-slime text-noir flex items-center justify-center hover:scale-110 transition-transform" title="Spotify" aria-label="Spotify">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.141-1-.12-1.141-.6-.141-.48.12-.999.601-1.14 4.32-1.379 9.72-.72 13.439 1.68.36.18.54.66.302 1.14zm.12-3.36C15.24 4.98 8.82 4.8 5.16 6.06c-.6.18-1.26-.12-1.44-.72-.18-.6.12-1.26.72-1.44 4.26-1.44 11.28-1.26 15.72 1.62.54.36.72 1.08.36 1.62-.36.42-1.08.54-1.62.18z"/></svg>
+              </a>
+              <a href="#" class="w-10 h-10 rounded-full bg-sky text-noir flex items-center justify-center hover:scale-110 transition-transform" title="VK" aria-label="VK">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M15.684 0H8.316C1.592 0 0 1.592 0 8.316v7.368C0 22.408 1.592 24 8.316 24h7.368C22.408 24 24 22.408 24 15.684V8.316C24 1.592 22.408 0 15.684 0zm3.692 17.123h-1.744c-.66 0-.862-.523-2.049-1.714-1.033-1.033-1.49-1.171-1.744-1.171-.356 0-.458.102-.458.593v1.575c0 .424-.135.678-1.253.678-1.846 0-3.896-1.118-5.335-3.202C4.624 10.857 4 8.967 4 8.524c0-.254.102-.491.593-.491h1.744c.44 0 .61.203.78.677.863 2.49 2.303 4.675 2.896 4.675.22 0 .322-.102.322-.66V9.721c-.068-1.186-.695-1.287-.695-1.71 0-.203.17-.407.44-.407h2.744c.373 0 .508.203.508.643v3.473c0 .372.17.508.271.508.22 0 .407-.135.814-.542 1.27-1.422 2.176-3.61 2.176-3.61.119-.254.322-.491.763-.491h1.744c.525 0 .644.27.525.643-.22 1.017-2.354 4.031-2.354 4.031-.186.305-.254.44 0 .78.186.254.796.779 1.203 1.253.745.847 1.32 1.558 1.473 2.049.17.49-.085.744-.576.744z"/></svg>
+              </a>
+            </div>
+          </div>
+          <h3 class="font-display text-xl text-white mb-1">ПЛАЧ ПО КАШЕ</h3>
+          <p class="font-mono text-xs text-sky mb-2">МИНИ-АЛЬБОМ • 2024</p>
+          <p class="text-sm text-gray-400">Пять треков слёз, слюней и гречневой муки.</p>
+        </article>
+
+        <!-- Release 3 -->
+        <article class="group relative bg-white/5 border border-white/10 p-4 hover:border-slime transition-colors">
+          <div class="aspect-square bg-gradient-to-br from-slime/40 via-noir to-toxic/30 mb-4 relative overflow-hidden group-hover:rotate-2 transition-transform duration-300">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span class="text-7xl opacity-30 group-hover:scale-125 transition-transform">⚡</span>
+            </div>
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+              <a href="#" class="w-10 h-10 rounded-full bg-toxic text-noir flex items-center justify-center hover:scale-110 transition-transform" title="Яндекс Музыка" aria-label="Яндекс Музыка">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97-.001c-.236 0-.44.086-.611.257-.17.171-.256.375-.256.611v7.026c0 .236.086.44.256.611.171.171.375.256.611.256h1.97c.236 0 .44-.085.611-.256.171-.171.256-.375.256-.611V9.089c0-.236-.085-.44-.256-.611-.171-.171-.375-.257-.611-.257zM9.076 8.22H7.105c-.236 0-.44.086-.611.257-.17.171-.256.375-.256.611v4.213c0 .236.086.44.256.611.171.171.375.256.611.256h1.971c.236 0 .44-.085.611-.256.17-.171.256-.375.256-.611V8.749c0-.236-.086-.44-.256-.611-.171-.171-.375-.257-.611-.257zm3.409 0h-1.97c-.236 0-.44.086-.611.257-.171.171-.256.375-.256.611v7.026c0 .236.085.44.256.611.171.171.375.256.611.256h1.97c.236 0 .44-.085.611-.256.171-.171.256-.375.256-.611V9.089c0-.236-.085-.44-.256-.611-.171-.171-.375-.257-.611-.257z"/></svg>
+              </a>
+              <a href="#" class="w-10 h-10 rounded-full bg-slime text-noir flex items-center justify-center hover:scale-110 transition-transform" title="Spotify" aria-label="Spotify">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.141-1-.12-1.141-.6-.141-.48.12-.999.601-1.14 4.32-1.379 9.72-.72 13.439 1.68.36.18.54.66.302 1.14zm.12-3.36C15.24 4.98 8.82 4.8 5.16 6.06c-.6.18-1.26-.12-1.44-.72-.18-.6.12-1.26.72-1.44 4.26-1.44 11.28-1.26 15.72 1.62.54.36.72 1.08.36 1.62-.36.42-1.08.54-1.62.18z"/></svg>
+              </a>
+              <a href="#" class="w-10 h-10 rounded-full bg-sky text-noir flex items-center justify-center hover:scale-110 transition-transform" title="VK" aria-label="VK">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M15.684 0H8.316C1.592 0 0 1.592 0 8.316v7.368C0 22.408 1.592 24 8.316 24h7.368C22.408 24 24 22.408 24 15.684V8.316C24 1.592 22.408 0 15.684 0zm3.692 17.123h-1.744c-.66 0-.862-.523-2.049-1.714-1.033-1.033-1.49-1.171-1.744-1.171-.356 0-.458.102-.458.593v1.575c0 .424-.135.678-1.253.678-1.846 0-3.896-1.118-5.335-3.202C4.624 10.857 4 8.967 4 8.524c0-.254.102-.491.593-.491h1.744c.44 0 .61.203.78.677.863 2.49 2.303 4.675 2.896 4.675.22 0 .322-.102.322-.66V9.721c-.068-1.186-.695-1.287-.695-1.71 0-.203.17-.407.44-.407h2.744c.373 0 .508.203.508.643v3.473c0 .372.17.508.271.508.22 0 .407-.135.814-.542 1.27-1.422 2.176-3.61 2.176-3.61.119-.254.322-.491.763-.491h1.744c.525 0 .644.27.525.643-.22 1.017-2.354 4.031-2.354 4.031-.186.305-.254.44 0 .78.186.254.796.779 1.203 1.253.745.847 1.32 1.558 1.473 2.049.17.49-.085.744-.576.744z"/></svg>
+              </a>
+            </div>
+          </div>
+          <h3 class="font-display text-xl text-white mb-1">ВРОТИК-РОК</h3>
+          <p class="font-mono text-xs text-slime mb-2">АЛЬБОМ • 2023</p>
+          <p class="text-sm text-gray-400">Манифест. Дебютная пластинка, где всё началось.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gigs -->
+  <section id="gigs" class="py-20 md:py-32 px-4 relative">
+    <div class="max-w-5xl mx-auto">
+      <p class="font-mono text-sky uppercase tracking-[0.3em] mb-4">афиша / g1gs</p>
+      <h2 class="font-display text-3xl md:text-5xl text-white mb-12">КОНЦЕРТЫ</h2>
+
+      <div class="space-y-4">
+        <div class="group flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 border border-white/10 bg-white/5 hover:border-toxic transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="text-center min-w-[70px]">
+              <p class="font-mono text-toxic text-2xl leading-none">12</p>
+              <p class="font-mono text-xs uppercase">сен</p>
+            </div>
+            <div>
+              <h3 class="font-display text-lg md:text-xl text-white">МОСКВА • Клуб «Похуй»</h3>
+              <p class="text-sm text-gray-400">Начало: 20:00 / Бар: 24/7</p>
+            </div>
+          </div>
+          <button class="risk-btn bg-slime text-noir px-6 py-3 font-bold uppercase text-sm tracking-wider hover:bg-white hover:shadow-[0_0_20px_#CCFF00] transition-all whitespace-nowrap">Иду рисковать</button>
+        </div>
+
+        <div class="group flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 border border-white/10 bg-white/5 hover:border-sky transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="text-center min-w-[70px]">
+              <p class="font-mono text-sky text-2xl leading-none">05</p>
+              <p class="font-mono text-xs uppercase">окт</p>
+            </div>
+            <div>
+              <h3 class="font-display text-lg md:text-xl text-white">САНКТ-ПЕТЕРБУРГ • MOD</h3>
+              <p class="text-sm text-gray-400">Начало: 19:30 / Танцпол: ад</p>
+            </div>
+          </div>
+          <button class="risk-btn bg-toxic text-noir px-6 py-3 font-bold uppercase text-sm tracking-wider hover:bg-white hover:shadow-[0_0_20px_#FF2A85] transition-all whitespace-nowrap">Вписаться</button>
+        </div>
+
+        <div class="group flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 border border-white/10 bg-white/5 hover:border-slime transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="text-center min-w-[70px]">
+              <p class="font-mono text-slime text-2xl leading-none">31</p>
+              <p class="font-mono text-xs uppercase">окт</p>
+            </div>
+            <div>
+              <h3 class="font-display text-lg md:text-xl text-white">ЕКАТЕРИНБУРГ • Телевизор</h3>
+              <p class="text-sm text-gray-400">Начало: 21:00 / Костюмы: welcome</p>
+            </div>
+          </div>
+          <button class="risk-btn bg-sky text-noir px-6 py-3 font-bold uppercase text-sm tracking-wider hover:bg-white hover:shadow-[0_0_20px_#70D6FF] transition-all whitespace-nowrap">Иду рисковать</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="py-20 md:py-32 px-4 bg-noir">
+    <div class="max-w-3xl mx-auto">
+      <p class="font-mono text-toxic uppercase tracking-[0.3em] mb-4">faq / частые вопросы</p>
+      <h2 class="font-display text-3xl md:text-5xl text-white mb-12">ВОПРОСЫ</h2>
+
+      <div class="space-y-4">
+        <div class="accordion-item border border-white/10 bg-white/5">
+          <button class="accordion-trigger w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors">
+            <span class="font-display text-lg text-white">Что такое вротик-рок?</span>
+            <i data-lucide="chevron-down" class="w-5 h-5 text-toxic accordion-icon transition-transform"></i>
+          </button>
+          <div class="accordion-content hidden px-4 pb-4 text-gray-300 text-sm leading-relaxed">
+            Это звук, который нельзя объяснить, можно только прочувствовать. Смесь эмо-трапа, пост-панка, гречки и лёгкой безысходности.
+          </div>
+        </div>
+
+        <div class="accordion-item border border-white/10 bg-white/5">
+          <button class="accordion-trigger w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors">
+            <span class="font-display text-lg text-white">Как попасть на концерт?</span>
+            <i data-lucide="chevron-down" class="w-5 h-5 text-toxic accordion-icon transition-transform"></i>
+          </button>
+          <div class="accordion-content hidden px-4 pb-4 text-gray-300 text-sm leading-relaxed">
+            Нажми кнопку «Иду рисковать» или «Вписаться». Дальше — судьба.
+          </div>
+        </div>
+
+        <div class="accordion-item border border-toxic/30 bg-toxic/5">
+          <button class="accordion-trigger w-full flex items-center justify-between p-4 text-left hover:bg-toxic/10 transition-colors">
+            <span class="font-display text-lg text-white">В чём философский смысл девиза?</span>
+            <i data-lucide="chevron-down" class="w-5 h-5 text-toxic accordion-icon transition-transform"></i>
+          </button>
+          <div class="accordion-content hidden px-4 pb-4">
+            <blockquote class="border-l-4 border-toxic pl-4 py-2 bg-toxic/10 my-2">
+              <p class="text-white font-mono text-lg italic">«Похуй что, главное чтобы встало»</p>
+              <p class="text-toxic text-xs mt-2 uppercase tracking-widest">— ГречиХа, манифест</p>
+            </blockquote>
+            <p class="text-gray-300 text-sm leading-relaxed mt-2">Это не про пофигизм. Это про то, что в мире хаоса важно найти хотя бы одну вещь, которая зажжёт тебя изнутри. И пусть всё остальное горит синим пламенем.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contacts" class="relative min-h-screen flex flex-col items-center justify-center px-4 py-20 overflow-hidden border-t border-white/10">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,42,133,0.2)_0%,_transparent_60%)]"></div>
+    <div class="relative z-10 text-center max-w-6xl mx-auto">
+      <p class="font-mono text-toxic uppercase tracking-[0.5em] mb-6 animate-flicker">девиз / mantra</p>
+      <h2 class="font-display text-4xl sm:text-6xl md:text-8xl lg:text-9xl text-white leading-none mb-12 cursor-default">
+        <span class="glitch-text neon-text block" data-text="ПОХУЙ ЧТО,">ПОХУЙ ЧТО,</span>
+        <span class="glitch-text neon-text block" data-text="ГЛАВНОЕ ЧТОБЫ">ГЛАВНОЕ ЧТОБЫ</span>
+        <span class="glitch-text neon-text block" data-text="ВСТАВИЛО">ВСТАВИЛО</span>
+      </h2>
+
+      <div class="flex justify-center gap-6 md:gap-8 mb-16 flex-wrap">
+        <a href="https://t.me/grechiha" target="_blank" class="sticker w-16 h-16 md:w-20 md:h-20 rounded-full bg-toxic text-noir flex items-center justify-center rotate-[-6deg]" title="Telegram" aria-label="Telegram">
+          <svg class="w-8 h-8 md:w-10 md:h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.141a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+        </a>
+        <a href="https://vk.com/grechiha" target="_blank" class="sticker w-16 h-16 md:w-20 md:h-20 rounded-full bg-toxic text-noir flex items-center justify-center rotate-[5deg]" title="VK" aria-label="VK">
+          <svg class="w-8 h-8 md:w-10 md:h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M15.684 0H8.316C1.592 0 0 1.592 0 8.316v7.368C0 22.408 1.592 24 8.316 24h7.368C22.408 24 24 22.408 24 15.684V8.316C24 1.592 22.408 0 15.684 0zm3.692 17.123h-1.744c-.66 0-.862-.523-2.049-1.714-1.033-1.033-1.49-1.171-1.744-1.171-.356 0-.458.102-.458.593v1.575c0 .424-.135.678-1.253.678-1.846 0-3.896-1.118-5.335-3.202C4.624 10.857 4 8.967 4 8.524c0-.254.102-.491.593-.491h1.744c.44 0 .61.203.78.677.863 2.49 2.303 4.675 2.896 4.675.22 0 .322-.102.322-.66V9.721c-.068-1.186-.695-1.287-.695-1.71 0-.203.17-.407.44-.407h2.744c.373 0 .508.203.508.643v3.473c0 .372.17.508.271.508.22 0 .407-.135.814-.542 1.27-1.422 2.176-3.61 2.176-3.61.119-.254.322-.491.763-.491h1.744c.525 0 .644.27.525.643-.22 1.017-2.354 4.031-2.354 4.031-.186.305-.254.44 0 .78.186.254.796.779 1.203 1.253.745.847 1.32 1.558 1.473 2.049.17.49-.085.744-.576.744z"/></svg>
+        </a>
+        <a href="https://youtube.com/@grechiha" target="_blank" class="sticker w-16 h-16 md:w-20 md:h-20 rounded-full bg-toxic text-noir flex items-center justify-center rotate-[-3deg]" title="YouTube" aria-label="YouTube">
+          <svg class="w-8 h-8 md:w-10 md:h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        </a>
+      </div>
+
+      <button id="secretBtn" class="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-noir font-display uppercase tracking-widest text-lg border-2 border-toxic hover:bg-toxic hover:text-white transition-colors shadow-[0_0_30px_rgba(255,42,133,0.4)]">
+        <span class="text-2xl group-hover:rotate-12 transition-transform">🌾</span>
+        Секретная гречка
+      </button>
+
+      <p class="mt-12 text-xs text-gray-600 uppercase tracking-widest">© 2026 ГРЕЧИХА. Все права вставлены.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Init icons
+    lucide.createIcons();
+
+    // Player
+    const playBtn = document.getElementById('playBtn');
+    const cassette = document.getElementById('cassette');
+    const progress = document.getElementById('progress');
+    let playing = false;
+    let progressInterval;
+
+    playBtn.addEventListener('click', () => {
+      playing = !playing;
+      playBtn.innerHTML = playing
+        ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/></svg>'
+        : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+      cassette.classList.toggle('playing', playing);
+      if (playing) {
+        let p = parseFloat(progress.style.width) || 0;
+        progressInterval = setInterval(() => {
+          p += 0.4;
+          if (p >= 100) p = 0;
+          progress.style.width = p + '%';
+        }, 100);
+      } else {
+        clearInterval(progressInterval);
+      }
+    });
+
+    // Close button runs away
+    const closeBtn = document.getElementById('closeBtn');
+    closeBtn.addEventListener('mouseover', () => {
+      const bar = closeBtn.parentElement;
+      const barRect = bar.getBoundingClientRect();
+      const btnRect = closeBtn.getBoundingClientRect();
+      const maxX = barRect.width - btnRect.width - 16;
+      const maxY = barRect.height - btnRect.height - 8;
+      const x = 8 + Math.random() * maxX;
+      const y = 8 + Math.random() * maxY;
+      closeBtn.style.left = x + 'px';
+      closeBtn.style.top = y + 'px';
+    });
+
+    // Accordion
+    document.querySelectorAll('.accordion-trigger').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.parentElement;
+        const content = item.querySelector('.accordion-content');
+        const icon = btn.querySelector('.accordion-icon');
+        const isOpen = !content.classList.contains('hidden');
+
+        document.querySelectorAll('.accordion-content').forEach(c => c.classList.add('hidden'));
+        document.querySelectorAll('.accordion-icon').forEach(i => i.style.transform = 'rotate(0deg)');
+
+        if (!isOpen) {
+          content.classList.remove('hidden');
+          icon.style.transform = 'rotate(180deg)';
+        }
+      });
+    });
+
+    // Risk buttons
+    document.querySelectorAll('.risk-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const original = btn.textContent;
+        btn.textContent = '✓ Вписан';
+        btn.classList.add('!bg-white', '!text-noir');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('!bg-white', '!text-noir');
+        }, 2000);
+      });
+    });
+
+    // Secret buckwheat
+    const secretBtn = document.getElementById('secretBtn');
+    secretBtn.addEventListener('click', () => {
+      const duration = 3000;
+      const end = Date.now() + duration;
+      const colors = ['#FF2A85', '#70D6FF', '#CCFF00', '#ffffff'];
+
+      (function frame() {
+        confetti({
+          particleCount: 6,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: colors,
+          shapes: ['circle', 'square'],
+          scalar: 1.2
+        });
+        confetti({
+          particleCount: 6,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: colors,
+          shapes: ['circle', 'square'],
+          scalar: 1.2
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      }());
+
+      for (let i = 0; i < 35; i++) {
+        const el = document.createElement('div');
+        el.textContent = Math.random() > 0.5 ? '🌾' : '💔';
+        el.style.position = 'fixed';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.top = '-60px';
+        el.style.fontSize = (22 + Math.random() * 40) + 'px';
+        el.style.pointerEvents = 'none';
+        el.style.zIndex = '9998';
+        el.style.transition = 'top 3.2s ease-in, transform 3.2s linear, opacity 3.2s ease';
+        el.style.opacity = '1';
+        document.body.appendChild(el);
+        requestAnimationFrame(() => {
+          el.style.top = '115vh';
+          el.style.transform = `rotate(${Math.random() * 720 - 360}deg)`;
+          el.style.opacity = '0';
+        });
+        setTimeout(() => el.remove(), 3300);
+      }
+    });
+  </script>
+</body>
+</html>
